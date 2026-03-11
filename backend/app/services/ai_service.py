@@ -35,7 +35,7 @@ def build_messages(
 async def stream_openai(
     messages: list[dict],
     system_prompt: str,
-    model: str = "gpt-4o",
+    model: str = "gpt-4.1",
 ) -> AsyncGenerator[str, None]:
     """Stream response from OpenAI."""
     client = _get_openai_client()
@@ -58,7 +58,7 @@ async def stream_openai(
 async def stream_claude(
     messages: list[dict],
     system_prompt: str,
-    model: str = "claude-sonnet-4-20250514",
+    model: str = "claude-sonnet-4-6-20250627",
 ) -> AsyncGenerator[str, None]:
     """Stream response from Claude."""
     client = _get_anthropic_client()
@@ -105,7 +105,7 @@ async def generate_title(message: str, ai_model: str = "openai") -> str:
         else:
             client = _get_openai_client()
             response = await client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4.1-mini",
                 messages=[
                     {"role": "system", "content": "Kamu adalah asisten yang membuat judul singkat."},
                     {"role": "user", "content": prompt},
