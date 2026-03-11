@@ -243,7 +243,9 @@ async def send_message(
                     yield f"data: {json_mod.dumps({'type': 'files', 'files': files})}\n\n"
 
         except Exception as e:
-            yield f"data: [ERROR] {str(e)}\n\n"
+            import logging
+            logging.getLogger(__name__).error(f"Chat streaming error: {e}")
+            yield f"data: [ERROR] Terjadi kesalahan saat memproses permintaan.\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
@@ -336,13 +338,16 @@ async def export_message(
     export_dir = Path(settings.EXPORT_DIR) / str(user.id)
     export_dir.mkdir(parents=True, exist_ok=True)
 
+    import re
+    safe_title = re.sub(r'[^\w\s-]', '', title)[:100].strip() or "Laporan"
+
     if format == "pdf":
         output_path = str(export_dir / f"chat_export_{message_id}.pdf")
         export_chat_to_pdf(message.content, output_path, title)
         return FileResponse(
             output_path,
             media_type="application/pdf",
-            filename=f"{title}.pdf",
+            filename=f"{safe_title}.pdf",
         )
     else:
         output_path = str(export_dir / f"chat_export_{message_id}.xlsx")
@@ -350,5 +355,5 @@ async def export_message(
         return FileResponse(
             output_path,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=f"{title}.xlsx",
+            filename=f"{safe_title}.xlsx",
         )

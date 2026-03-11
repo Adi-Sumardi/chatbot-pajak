@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Bot, X, FileText, Loader2 } from "lucide-react";
+import { Bot, X, FileText, Loader2, Menu } from "lucide-react";
 import { useChat } from "@/lib/hooks/useChat";
 import ConversationList from "@/components/chat/ConversationList";
 import ChatMessage from "@/components/chat/ChatMessage";
@@ -38,6 +38,7 @@ export default function ChatPage() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetchConversations();
@@ -138,15 +139,23 @@ export default function ChatPage() {
         onDelete={deleteConversation}
         onArchive={archiveConversation}
         onSearch={handleSearch}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       {/* Chat area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Chat header */}
-        <div className="flex shrink-0 items-center justify-between border-b px-6 h-12">
+        <div className="flex shrink-0 items-center justify-between border-b px-4 sm:px-6 h-12">
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="sm:hidden p-1 rounded-md hover:bg-muted transition-colors"
+            >
+              <Menu className="h-5 w-5 text-muted-foreground" />
+            </button>
             <Bot className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-medium text-foreground truncate max-w-md">
+            <h2 className="text-sm font-medium text-foreground truncate max-w-[50vw] sm:max-w-md">
               {currentConversation?.title || "Profesor Pajak AI"}
             </h2>
           </div>
@@ -156,8 +165,8 @@ export default function ChatPage() {
         {/* Messages */}
         {currentConversation ? (
           <>
-            <div className="flex-1 overflow-y-auto px-6" ref={scrollRef}>
-              <div className="mx-auto max-w-4xl py-6">
+            <div className="flex-1 overflow-y-auto px-3 sm:px-6" ref={scrollRef}>
+              <div className="mx-auto max-w-4xl py-4 sm:py-6">
                 {messages.length === 0 && !isStreaming && (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
@@ -195,7 +204,7 @@ export default function ChatPage() {
 
             {/* Attached files - above chat input */}
             {attachedFiles.length > 0 && (
-              <div className="shrink-0 px-6">
+              <div className="shrink-0 px-3 sm:px-6">
                 <div className="mx-auto max-w-4xl flex items-center gap-2 flex-wrap px-2.5 pt-3 pb-1">
                   {attachedFiles.map((af, i) => (
                     <span
@@ -227,11 +236,18 @@ export default function ChatPage() {
             />
           </>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center text-center p-8">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-6">
-              <Bot className="h-10 w-10" />
+          <div className="flex flex-1 flex-col items-center justify-center text-center p-4 sm:p-8">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="sm:hidden absolute top-3 left-3 p-1 rounded-md hover:bg-muted transition-colors"
+            >
+              <Menu className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4 sm:mb-6">
+              <Bot className="h-8 w-8 sm:h-10 sm:w-10" />
             </div>
-            <h2 className="text-xl font-bold">Chatbot Pajak</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Chatbot Pajak</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
               Profesor Perpajakan Indonesia siap membantu Anda. Pilih percakapan yang ada atau mulai chat baru.
             </p>

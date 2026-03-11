@@ -104,7 +104,7 @@ export default function DocumentsPage() {
         }
       />
 
-      <div className="p-6 space-y-4 flex-1 overflow-auto">
+      <div className="p-4 sm:p-6 space-y-4 flex-1 overflow-auto">
         {/* Filters */}
         <div className="flex gap-2 flex-wrap">
           {filters.map((f, i) => (
@@ -130,7 +130,36 @@ export default function DocumentsPage() {
             <p className="text-sm text-muted-foreground mt-1">Unggah faktur pajak, bukti potong, atau rekening koran</p>
           </div>
         ) : (
-          <div className="rounded-lg border bg-card">
+          <>
+          {/* Mobile card view */}
+          <div className="sm:hidden space-y-3">
+            {documents.map((doc) => (
+              <div key={doc.id} className="rounded-lg border bg-card p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Badge variant="secondary" className={DOC_TYPE_COLORS[doc.doc_type || "other"]}>
+                      {DOC_TYPE_LABELS[doc.doc_type || "other"]}
+                    </Badge>
+                    <p className="text-sm font-medium mt-2 truncate">{doc.file_name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(doc.created_at).toLocaleDateString("id-ID")} · {formatSize(doc.file_size)}
+                    </p>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handlePreview(doc)}>
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(doc.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="hidden sm:block rounded-lg border bg-card">
             <table className="w-full">
               <thead>
                 <tr className="border-b text-left text-xs text-muted-foreground">
@@ -169,15 +198,16 @@ export default function DocumentsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
       {/* Preview Modal */}
       {previewDoc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setPreviewDoc(null)}>
-          <div className="bg-card rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col m-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] sm:max-h-[80vh] flex flex-col m-2 sm:m-4" onClick={(e) => e.stopPropagation()}>
             {/* Modal header */}
-            <div className="flex items-center justify-between border-b px-6 py-4">
+            <div className="flex items-center justify-between border-b px-4 sm:px-6 py-3 sm:py-4">
               <div className="flex items-center gap-3">
                 <FileText className="h-5 w-5 text-primary" />
                 <div>

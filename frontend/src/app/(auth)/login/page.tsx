@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,13 +27,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
-            CP
-          </div>
+          <Image
+            src="/logo/logo-chatbot.png"
+            alt="Chatbot Pajak"
+            width={56}
+            height={56}
+            className="mx-auto rounded-xl"
+          />
           <h1 className="mt-4 text-2xl font-bold text-foreground">Chatbot Pajak</h1>
           <p className="mt-1 text-sm text-muted-foreground">Profesor Perpajakan Indonesia</p>
         </div>

@@ -195,8 +195,9 @@ async def serve_document_file(
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token required")
 
-    payload = decode_token(token)
-    if not payload:
+    try:
+        payload = decode_token(token)
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = await get_user_by_id(db, payload.get("sub", ""))
@@ -211,6 +212,15 @@ async def serve_document_file(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
     if not os.path.exists(document.file_path):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found on disk")
+
+    # Prevent path traversal: ensure file_path is within UPLOAD_DIR
+    from app.config import get_settings
+    settings = get_settings()
+    real_path = os.path.realpath(document.file_path)
+    allowed_dir = os.path.realpath(settings.UPLOAD_DIR)
+    if not real_path.startswith(allowed_dir):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
     return FileResponse(
         document.file_path,
         media_type=document.mime_type,

@@ -206,16 +206,16 @@ export default function ScannerPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b bg-card px-6 h-14">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Scanner Rekening Koran</h2>
-          <p className="text-xs text-muted-foreground">Scan PDF rekening koran ke Excel dengan OCR</p>
+      <div className="flex shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6 h-14">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground truncate">Scanner Rekening Koran</h2>
+          <p className="text-xs text-muted-foreground truncate">Scan PDF rekening koran ke Excel dengan OCR</p>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
         {/* Left panel - Upload + Job List */}
-        <div className="w-80 shrink-0 border-r flex flex-col overflow-hidden bg-card">
+        <div className="sm:w-80 shrink-0 border-b sm:border-b-0 sm:border-r flex flex-col overflow-hidden bg-card max-h-[40vh] sm:max-h-none">
           {/* Upload section */}
           <div className="shrink-0 p-4 border-b space-y-3">
             <div
@@ -351,7 +351,7 @@ export default function ScannerPage() {
           {selectedJob ? (
             <>
               {/* Results header */}
-              <div className="shrink-0 flex items-center justify-between border-b px-6 py-3">
+              <div className="shrink-0 flex items-center justify-between border-b px-4 sm:px-6 py-3">
                 <div>
                   <h3 className="text-sm font-semibold">
                     Hasil Scan - {BANK_LABELS[selectedJob.bank_name || "other"]}

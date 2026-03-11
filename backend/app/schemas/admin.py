@@ -1,7 +1,11 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from typing import Literal
+
+from pydantic import BaseModel, EmailStr, Field
+
+VALID_ROLES = Literal["staff", "admin", "superadmin"]
 
 
 class UserListResponse(BaseModel):
@@ -18,19 +22,19 @@ class UserListResponse(BaseModel):
 
 class AdminUserCreate(BaseModel):
     email: EmailStr
-    password: str
-    full_name: str
-    role: str = "staff"
-    kantor_pajak: str | None = None
+    password: str = Field(min_length=6)
+    full_name: str = Field(min_length=1, max_length=100)
+    role: VALID_ROLES = "staff"
+    kantor_pajak: str | None = Field(None, max_length=100)
 
 
 class AdminUserUpdate(BaseModel):
     email: EmailStr | None = None
-    full_name: str | None = None
-    role: str | None = None
-    kantor_pajak: str | None = None
+    full_name: str | None = Field(None, max_length=100)
+    role: VALID_ROLES | None = None
+    kantor_pajak: str | None = Field(None, max_length=100)
     is_active: bool | None = None
-    password: str | None = None
+    password: str | None = Field(None, min_length=6)
 
 
 class DashboardStats(BaseModel):

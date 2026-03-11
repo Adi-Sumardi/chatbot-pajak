@@ -109,9 +109,9 @@ async def scan_document(
         ocr_job.status = "completed"
         ocr_job.completed_at = datetime.utcnow()
     except Exception as e:
-        logger.error(f"OCR processing failed: {e}")
+        logger.error(f"OCR processing failed: {e}", exc_info=True)
         ocr_job.status = "failed"
-        ocr_job.error_message = str(e)
+        ocr_job.error_message = "Gagal memproses file PDF. Pastikan file tidak corrupt."
 
     await db.flush()
     return ocr_job
@@ -218,8 +218,9 @@ async def export_ocr_to_excel(
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token required")
 
-    payload = decode_token(token)
-    if not payload:
+    try:
+        payload = decode_token(token)
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = await get_user_by_id(db, payload.get("sub", ""))
@@ -266,10 +267,12 @@ async def export_ocr_to_excel(
         for r in results
     ]
 
-    # Export
+    # Export - sanitize bank_name to prevent path traversal
+    import re
+    safe_bank = re.sub(r'[^a-zA-Z0-9_-]', '', job.bank_name or 'bank')
     export_dir = Path(settings.EXPORT_DIR) / str(user.id)
     export_dir.mkdir(parents=True, exist_ok=True)
-    export_path = str(export_dir / f"rekening_koran_{job.bank_name or 'bank'}_{job_id}.xlsx")
+    export_path = str(export_dir / f"rekening_koran_{safe_bank}_{job_id}.xlsx")
 
     await _run_in_thread(export_to_excel, rows, export_path, job.bank_name)
 

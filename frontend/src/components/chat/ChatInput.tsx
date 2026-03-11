@@ -38,8 +38,8 @@ export default function ChatInput({ onSend, onAttach, disabled, placeholder }: C
   };
 
   return (
-    <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-6 py-5">
-      <div className="mx-auto flex max-w-3xl items-end gap-1.5 rounded-2xl border border-border/60 bg-background px-3 py-2 shadow-sm transition-shadow focus-within:shadow-md focus-within:border-primary/30">
+    <div className="shrink-0 border-t bg-card/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-5">
+      <div className="mx-auto flex max-w-3xl items-end gap-1.5 rounded-2xl border border-border/60 bg-background px-2 sm:px-3 py-2 shadow-sm transition-shadow focus-within:shadow-md focus-within:border-primary/30">
         <button
           type="button"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:pointer-events-none"
@@ -68,7 +68,7 @@ export default function ChatInput({ onSend, onAttach, disabled, placeholder }: C
           <Send className="h-4 w-4" />
         </Button>
       </div>
-      <p className="mt-2.5 text-center text-xs text-muted-foreground">
+      <p className="hidden sm:block mt-2.5 text-center text-xs text-muted-foreground">
         Tekan Enter untuk kirim, Shift+Enter untuk baris baru
       </p>
     </div>

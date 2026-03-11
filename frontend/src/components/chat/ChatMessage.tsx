@@ -45,14 +45,14 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
   return (
     <div
       className={cn(
-        "flex gap-4 py-5 transition-all duration-300 ease-out",
+        "flex gap-2.5 sm:gap-4 py-3 sm:py-5 transition-all duration-300 ease-out",
         isUser ? "flex-row-reverse" : ""
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm",
+          "flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full shadow-sm",
           isUser
             ? "bg-secondary text-secondary-foreground"
             : "bg-linear-to-br from-primary to-primary/80 text-primary-foreground"
@@ -75,10 +75,10 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
         </div>
         <div
           className={cn(
-            "inline-block rounded-2xl text-[14px] leading-[1.75] max-w-[88%] text-left",
+            "inline-block rounded-2xl text-[13px] sm:text-[14px] leading-[1.75] max-w-[95%] sm:max-w-[88%] text-left",
             isUser
-              ? "bg-primary text-primary-foreground px-5 py-3 rounded-br-md shadow-sm"
-              : "bg-muted/60 text-foreground px-5 py-4 rounded-bl-md border border-border/40"
+              ? "bg-primary text-primary-foreground px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-br-md shadow-sm"
+              : "bg-muted/60 text-foreground px-3.5 sm:px-5 py-3 sm:py-4 rounded-bl-md border border-border/40"
           )}
         >
           {isUser ? (

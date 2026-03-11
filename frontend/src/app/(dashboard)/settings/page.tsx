@@ -91,19 +91,19 @@ export default function SettingsPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center border-b bg-card px-6 h-14">
+      <div className="flex shrink-0 items-center border-b bg-card px-4 sm:px-6 h-14">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Pengaturan</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">Pengaturan</h2>
           <p className="text-xs text-muted-foreground">Kelola profil dan keamanan akun Anda</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-4xl p-6 space-y-6">
+        <div className="mx-auto max-w-4xl p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* Profile Card */}
           <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="flex items-center gap-3 px-6 py-4 border-b bg-muted/30">
+            <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <User className="h-4 w-4" />
               </div>
@@ -113,18 +113,18 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {/* Avatar + Info summary */}
-              <div className="flex items-center gap-4 pb-4 border-b border-border/40">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold">
+              <div className="flex items-center gap-3 sm:gap-4 pb-4 border-b border-border/40">
+                <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-primary text-primary-foreground text-lg font-bold shrink-0">
                   {user?.full_name?.charAt(0)?.toUpperCase() || "U"}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{user?.full_name}</p>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Mail className="h-3 w-3" />
-                      {user?.email}
+                      <span className="truncate max-w-37.5 sm:max-w-none">{user?.email}</span>
                     </span>
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Shield className="h-3 w-3" />
@@ -169,7 +169,7 @@ export default function SettingsPage() {
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                     <Input
-                      value={formatDate((user as Record<string, string>)?.created_at)}
+                      value={formatDate((user as unknown as Record<string, string>)?.created_at)}
                       readOnly
                       className="bg-muted/50 cursor-not-allowed pl-9"
                     />
@@ -205,7 +205,7 @@ export default function SettingsPage() {
 
           {/* Password Card */}
           <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="flex items-center gap-3 px-6 py-4 border-b bg-muted/30">
+            <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b bg-muted/30">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
                 <Lock className="h-4 w-4" />
               </div>
@@ -215,7 +215,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Password Saat Ini</label>
                 <Input

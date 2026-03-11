@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ConversationCreate(BaseModel):
-    title: str | None = None
+    title: str | None = Field(None, max_length=255)
     ai_model: str = "openai"  # 'openai' or 'claude'
 
 
@@ -41,7 +41,7 @@ class MessageResponse(BaseModel):
 
 
 class ConversationUpdate(BaseModel):
-    title: str | None = None
+    title: str | None = Field(None, max_length=255)
     is_archived: bool | None = None
 
 

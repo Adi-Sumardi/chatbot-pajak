@@ -214,19 +214,19 @@ export default function AdminPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b bg-card px-6 h-14">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Kelola User</h2>
-          <p className="text-xs text-muted-foreground">Manajemen pengguna dan statistik aplikasi</p>
+      <div className="flex shrink-0 items-center justify-between border-b bg-card px-4 sm:px-6 h-14">
+        <div className="min-w-0">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground truncate">Kelola User</h2>
+          <p className="text-xs text-muted-foreground truncate">Manajemen pengguna dan statistik</p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <UserPlus className="h-3.5 w-3.5 mr-2" />
-          Tambah User
+        <Button size="sm" onClick={openCreate} className="shrink-0 ml-2">
+          <UserPlus className="h-3.5 w-3.5 sm:mr-2" />
+          <span className="hidden sm:inline">Tambah User</span>
         </Button>
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-6xl p-6 space-y-6">
+        <div className="mx-auto max-w-6xl p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* Stats Cards */}
           {stats && (
@@ -254,9 +254,9 @@ export default function AdminPage() {
 
           {/* Users Table */}
           <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 border-b">
               <h3 className="text-sm font-semibold">Daftar User ({filteredUsers.length})</h3>
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={search}
@@ -389,7 +389,7 @@ export default function AdminPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Nama Lengkap</label>
                 <Input
@@ -409,7 +409,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">
                   Password {editingUser && "(kosongkan jika tidak diubah)"}
@@ -423,7 +423,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground">Role</label>
-                <Select value={formData.role} onValueChange={(v) => setFormData((p) => ({ ...p, role: v }))}>
+                <Select value={formData.role} onValueChange={(v) => v && setFormData((p) => ({ ...p, role: v }))}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />
                   </SelectTrigger>

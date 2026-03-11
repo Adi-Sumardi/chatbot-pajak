@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Plus, Trash2, Archive, Search } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Archive, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +23,8 @@ interface ConversationListProps {
   onDelete: (id: string) => void;
   onArchive?: (id: string) => void;
   onSearch?: (query: string) => void;
+  open?: boolean;
+  onClose?: () => void;
 }
 
 export default function ConversationList({
@@ -33,6 +35,8 @@ export default function ConversationList({
   onDelete,
   onArchive,
   onSearch,
+  open,
+  onClose,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Conversation | null>(null);
@@ -49,13 +53,30 @@ export default function ConversationList({
     }
   };
 
-  return (
-    <div className="flex h-full w-72 flex-col border-r bg-card overflow-hidden">
+  const handleSelect = (id: string) => {
+    onSelect(id);
+    onClose?.();
+  };
+
+  const handleNew = () => {
+    onNew();
+    onClose?.();
+  };
+
+  const sidebarContent = (
+    <>
       <div className="flex shrink-0 items-center justify-between border-b px-4 h-12">
         <h3 className="text-sm font-semibold">Percakapan</h3>
-        <Button variant="ghost" size="icon" onClick={onNew} className="h-8 w-8">
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={handleNew} className="h-8 w-8">
+            <Plus className="h-4 w-4" />
+          </Button>
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 sm:hidden">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -91,7 +112,7 @@ export default function ConversationList({
                     ? "bg-primary/10 text-primary"
                     : "hover:bg-muted text-foreground"
                 )}
-                onClick={() => onSelect(conv.id)}
+                onClick={() => handleSelect(conv.id)}
               >
                 <MessageSquare className="h-4 w-4 shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -135,7 +156,7 @@ export default function ConversationList({
       </div>
 
       {/* Delete confirmation modal */}
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
             <DialogTitle>Hapus Percakapan</DialogTitle>
@@ -153,6 +174,25 @@ export default function ConversationList({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar - always visible */}
+      <div className="hidden sm:flex h-full w-72 flex-col border-r bg-card overflow-hidden">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile drawer overlay */}
+      {open && (
+        <div className="sm:hidden fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw] flex flex-col bg-card shadow-xl">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
