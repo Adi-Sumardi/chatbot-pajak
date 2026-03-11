@@ -58,7 +58,7 @@ async def stream_openai(
 async def stream_claude(
     messages: list[dict],
     system_prompt: str,
-    model: str = "claude-sonnet-4-6-20250627",
+    model: str = "claude-sonnet-4-6",
 ) -> AsyncGenerator[str, None]:
     """Stream response from Claude."""
     client = _get_anthropic_client()
