@@ -59,7 +59,7 @@ if [ "$SKIP_FRONTEND" = false ]; then
   echo "[3/4] Updating frontend..."
   cd "$APP_DIR/frontend"
 
-  npm ci --omit=dev
+  npm ci
   npm run build
 
   # Copy static files for standalone build (required for proper UI)
