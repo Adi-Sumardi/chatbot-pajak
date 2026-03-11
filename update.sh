@@ -6,7 +6,7 @@
 # =============================================================================
 set -euo pipefail
 
-APP_DIR="/opt/chatbot-pajak"
+APP_DIR="/var/www/chatbot-pajak"
 BRANCH="main"
 
 echo "============================================"

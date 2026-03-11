@@ -1,7 +1,8 @@
 #!/bin/bash
 # =============================================================================
-# deploy.sh - Initial deployment script for Chatbot Pajak
-# Run this ONCE on a fresh Ubuntu VPS (Biznet Gio Cloud)
+# deploy.sh - Deploy Chatbot Pajak to existing VPS (Biznet Gio Cloud)
+# VPS sudah ada: Node.js 20, Python 3.10, Nginx, Certbot
+# Akan: cleanup docscan, install PostgreSQL + Python 3.11, deploy chatbot
 # Domain: chatbot.adilabs.id
 # =============================================================================
 set -euo pipefail
@@ -9,16 +10,14 @@ set -euo pipefail
 # --- Configuration ---
 APP_NAME="chatbot-pajak"
 DOMAIN="chatbot.adilabs.id"
-APP_DIR="/opt/$APP_NAME"
+APP_DIR="/var/www/$APP_NAME"
 REPO_URL="https://github.com/Adi-Sumardi/chatbot-pajak.git"
 BRANCH="main"
 DB_NAME="chatbot_pajak"
 DB_USER="chatbot_user"
-NODE_VERSION="20"
-PYTHON_VERSION="3.11"
 
 echo "============================================"
-echo "  Chatbot Pajak - Initial Deployment"
+echo "  Chatbot Pajak - Deployment"
 echo "  Domain: $DOMAIN"
 echo "============================================"
 
@@ -32,39 +31,67 @@ read -p "Enter Anthropic API key (or leave blank): " ANTHROPIC_KEY
 read -p "Enter your email for SSL certificate: " SSL_EMAIL
 
 # =============================================================================
-# 1. System packages
+# 1. Cleanup docscan
 # =============================================================================
 echo ""
-echo "[1/9] Installing system packages..."
-sudo apt-get update
-sudo apt-get install -y \
-  curl git build-essential \
-  python${PYTHON_VERSION} python${PYTHON_VERSION}-venv python${PYTHON_VERSION}-dev \
-  postgresql postgresql-contrib \
-  nginx certbot python3-certbot-nginx \
-  libpq-dev
+echo "[1/9] Cleaning up docscan..."
+
+# Stop docscan service
+sudo systemctl stop docscan-backend.service 2>/dev/null || true
+sudo systemctl disable docscan-backend.service 2>/dev/null || true
+sudo rm -f /etc/systemd/system/docscan-backend.service
+
+# Remove docscan nginx config
+sudo rm -f /etc/nginx/sites-enabled/docscan
+sudo rm -f /etc/nginx/sites-available/docscan
+
+# Remove docscan files (keep backup just in case)
+if [ -d "/var/www/docscan" ]; then
+  sudo mv /var/www/docscan /var/www/docscan_backup_$(date +%Y%m%d)
+  echo "  Docscan backed up to /var/www/docscan_backup_$(date +%Y%m%d)"
+fi
+
+sudo systemctl daemon-reload
+echo "  Docscan cleaned up."
 
 # =============================================================================
-# 2. Install Node.js via NodeSource
+# 2. Install missing packages (PostgreSQL, Python 3.11)
 # =============================================================================
 echo ""
-echo "[2/9] Installing Node.js ${NODE_VERSION}..."
-if ! command -v node &>/dev/null; then
-  curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
-  sudo apt-get install -y nodejs
+echo "[2/9] Installing required packages..."
+sudo apt-get update
+sudo apt-get install -y \
+  software-properties-common \
+  postgresql postgresql-contrib \
+  libpq-dev
+
+# Install Python 3.11 from deadsnakes PPA
+if ! command -v python3.11 &>/dev/null; then
+  sudo add-apt-repository -y ppa:deadsnakes/ppa
+  sudo apt-get update
+  sudo apt-get install -y python3.11 python3.11-venv python3.11-dev
 fi
-echo "Node.js $(node -v), npm $(npm -v)"
+
+echo "  Python: $(python3.11 --version)"
+echo "  Node.js: $(node -v)"
+echo "  PostgreSQL: $(psql --version)"
 
 # =============================================================================
 # 3. Setup PostgreSQL
 # =============================================================================
 echo ""
 echo "[3/9] Setting up PostgreSQL..."
+
+# Ensure PostgreSQL is running
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+
 sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1 || \
   sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
 sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1 || \
   sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+echo "  Database '$DB_NAME' ready."
 
 # =============================================================================
 # 4. Clone repository
@@ -87,7 +114,7 @@ echo ""
 echo "[5/9] Setting up backend..."
 cd "$APP_DIR/backend"
 
-python${PYTHON_VERSION} -m venv venv
+python3.11 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -100,8 +127,8 @@ JWT_SECRET_KEY=${JWT_SECRET}
 OPENAI_API_KEY=${OPENAI_KEY}
 ANTHROPIC_API_KEY=${ANTHROPIC_KEY}
 CORS_ORIGINS=["https://${DOMAIN}"]
-UPLOAD_DIR=/opt/${APP_NAME}/backend/storage/uploads
-EXPORT_DIR=/opt/${APP_NAME}/backend/storage/exports
+UPLOAD_DIR=${APP_DIR}/backend/storage/uploads
+EXPORT_DIR=${APP_DIR}/backend/storage/exports
 DEBUG=false
 ENVFILE
 
@@ -119,7 +146,6 @@ echo ""
 echo "[6/9] Setting up frontend..."
 cd "$APP_DIR/frontend"
 
-# Create .env.local
 cat > .env.local <<ENVFILE
 NEXT_PUBLIC_API_URL=https://${DOMAIN}
 ENVFILE
@@ -144,10 +170,13 @@ Requires=postgresql.service
 Type=simple
 User=$USER
 WorkingDirectory=$APP_DIR/backend
-Environment=PATH=$APP_DIR/backend/venv/bin:/usr/bin
+EnvironmentFile=$APP_DIR/backend/.env
+Environment=PATH=$APP_DIR/backend/venv/bin:/usr/local/bin:/usr/bin
 ExecStart=$APP_DIR/backend/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -169,6 +198,8 @@ Environment=HOSTNAME=127.0.0.1
 ExecStart=/usr/bin/node $APP_DIR/frontend/.next/standalone/server.js
 Restart=always
 RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -191,6 +222,12 @@ server {
 
     client_max_body_size 50M;
 
+    # Certbot verification
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        allow all;
+    }
+
     # API & backend
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
@@ -207,7 +244,7 @@ server {
         proxy_read_timeout 300s;
     }
 
-    # Frontend
+    # Frontend (Next.js)
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -236,9 +273,6 @@ echo ""
 echo "[9/9] Obtaining SSL certificate..."
 sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$SSL_EMAIL"
 
-# Certbot auto-renewal timer
-sudo systemctl enable certbot.timer
-
 echo ""
 echo "============================================"
 echo "  Deployment complete!"
@@ -251,4 +285,7 @@ echo ""
 echo "  Logs:"
 echo "    journalctl -u chatbot-backend -f"
 echo "    journalctl -u chatbot-frontend -f"
+echo ""
+echo "  Update:"
+echo "    cd $APP_DIR && ./update.sh"
 echo "============================================"
