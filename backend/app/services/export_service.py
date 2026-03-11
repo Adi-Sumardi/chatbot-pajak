@@ -218,8 +218,15 @@ class ChatPDF(FPDF):
         self.cell(0, 10, f"Chatbot Pajak - {datetime.now().strftime('%d/%m/%Y')} - Hal {self.page_no()}/{{nb}}", align="C")
 
 
+def _strip_emoji(text: str) -> str:
+    """Remove emoji and other non-latin1 characters that fpdf can't render."""
+    return text.encode("latin-1", errors="ignore").decode("latin-1")
+
+
 def export_chat_to_pdf(content: str, output_path: str, title: str = "Laporan") -> str:
     """Export AI chat response to PDF file."""
+    content = _strip_emoji(content)
+    title = _strip_emoji(title)
     pdf = ChatPDF(title=title)
     pdf.alias_nb_pages()
     pdf.add_page()

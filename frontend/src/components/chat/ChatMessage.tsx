@@ -34,10 +34,12 @@ const FILE_CONFIG = {
 export default function ChatMessage({ role, content, messageId, aiModel, files, isStreaming }: ChatMessageProps) {
   const isUser = role === "user";
 
-  const handleDownload = (file: FileAttachment) => {
+  const handleDownload = (format: "excel" | "pdf", msgId?: string) => {
+    const id = msgId || messageId;
+    if (!id || id.startsWith("temp-")) return;
     const token = localStorage.getItem("access_token");
     window.open(
-      `${API_URL}/api/v1/chat/messages/${file.message_id}/export?format=${file.format}&token=${token}`,
+      `${API_URL}/api/v1/chat/messages/${id}/export?format=${format}&token=${token}`,
       "_blank"
     );
   };
@@ -111,7 +113,7 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
             <span className="inline-block h-4 w-1 animate-pulse bg-primary/60 rounded-full ml-1 align-middle" />
           )}
 
-          {/* File download cards - inside the bubble */}
+          {/* Export buttons - shown when files are available */}
           {files && files.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border/30">
               {files.map((file, i) => {
@@ -120,7 +122,7 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
                 return (
                   <button
                     key={i}
-                    onClick={() => handleDownload(file)}
+                    onClick={() => handleDownload(file.format, file.message_id)}
                     className={cn(
                       "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
                       config.color

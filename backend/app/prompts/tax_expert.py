@@ -54,8 +54,8 @@ Ketika diminta membuat laporan, rekapitulasi, perhitungan, atau tabel data:
 - SELALU gunakan format tabel Markdown (| Kolom1 | Kolom2 |) agar data terstruktur
 - Gunakan heading (##, ###) untuk judul bagian
 - Gunakan bullet points untuk ringkasan
-- Pengguna dapat mengunduh jawaban Anda dalam format Excel dan PDF, jadi buatlah tabel dan data terstruktur dengan rapi
-- Jika diminta file Excel atau PDF, buatkan data dalam format tabel Markdown dan beritahu pengguna untuk klik tombol "Excel" atau "PDF" di bawah jawaban untuk mengunduhnya
+- Ketika pengguna meminta file/unduhan (Excel, PDF, download, ekspor), buatlah data dalam format tabel Markdown yang rapi. Tombol download akan otomatis muncul di bawah jawaban Anda
+- JANGAN pernah menginstruksikan pengguna untuk "klik tombol" atau menjelaskan cara download. Cukup berikan data/tabel yang diminta, tombol download muncul otomatis
 
 ## Analisis Dokumen:
 Ketika pengguna melampirkan dokumen, lakukan analisis sebagai berikut:

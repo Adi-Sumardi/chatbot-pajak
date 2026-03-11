@@ -160,16 +160,20 @@ export function useChat() {
         }
       }
 
-      const assistantMsg: Message = {
-        id: `temp-assistant-${Date.now()}`,
-        role: "assistant",
-        content: fullContent,
-        ai_model: aiModel || currentConversation.ai_model,
-        files: generatedFiles.length > 0 ? generatedFiles : undefined,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
       setStreamingContent("");
+
+      // Refresh conversation to get real message IDs from DB (needed for export buttons)
+      const refreshRes = await api.get(`/chat/conversations/${currentConversation.id}`);
+      const dbMessages: Message[] = refreshRes.data.messages || [];
+
+      // If files were generated via SSE, attach them to the last assistant message
+      if (generatedFiles.length > 0 && dbMessages.length > 0) {
+        const lastMsg = dbMessages[dbMessages.length - 1];
+        if (lastMsg.role === "assistant") {
+          lastMsg.files = generatedFiles;
+        }
+      }
+      setMessages(dbMessages);
 
       await fetchConversations();
     } catch (error) {
