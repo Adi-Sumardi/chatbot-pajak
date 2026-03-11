@@ -20,6 +20,7 @@ anthropic
 # Document Processing
 PyPDF2
 Pillow
+pdfplumber
 
 # Export
 openpyxl
