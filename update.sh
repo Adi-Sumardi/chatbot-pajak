@@ -62,6 +62,10 @@ if [ "$SKIP_FRONTEND" = false ]; then
   npm ci --omit=dev
   npm run build
 
+  # Copy static files for standalone build (required for proper UI)
+  cp -r public .next/standalone/public
+  cp -r .next/static .next/standalone/.next/static
+
   echo "Restarting frontend..."
   sudo systemctl restart chatbot-frontend
   echo "Frontend restarted."

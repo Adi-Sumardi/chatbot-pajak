@@ -18,7 +18,7 @@ export default function ModelSelector({ value, onChange, disabled }: ModelSelect
         <SelectItem value="openai">
           <span className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-green-500" />
-            OpenAI GPT-4o
+            OpenAI
           </span>
         </SelectItem>
         <SelectItem value="claude">

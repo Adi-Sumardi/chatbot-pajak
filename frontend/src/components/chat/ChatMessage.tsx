@@ -69,7 +69,7 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
           </span>
           {aiModel && !isUser && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-              {aiModel === "claude" ? "Claude" : "GPT-4o"}
+              {aiModel === "claude" ? "Claude" : "OpenAI"}
             </span>
           )}
         </div>
