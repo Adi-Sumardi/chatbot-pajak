@@ -1,0 +1,32 @@
+# Core
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Database
+sqlalchemy
+asyncpg
+alembic
+psycopg2-binary
+
+# Auth
+pyjwt
+passlib[bcrypt]
+
+# AI
+openai
+anthropic
+
+# Document Processing
+PyPDF2
+Pillow
+
+# Export
+openpyxl
+
+# Utils
+python-dotenv
+pydantic[email]
+pydantic-settings
+aiofiles
+httpx
