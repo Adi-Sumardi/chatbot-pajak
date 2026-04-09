@@ -595,47 +595,36 @@ async def process_pdf(
 ) -> list[dict]:
     """Extract and parse bank statement from PDF.
 
-    Pipeline:
-    1. pdfplumber table extraction (fast, heuristic)
-    2. Text regex fallback if table extraction yields < 3 rows
-    3. LLM structuring (Claude Haiku / GPT-4.1-mini) if quality is still low
+    Pipeline (LLM-first for accuracy):
+    1. LLM structuring (Claude Haiku primary, GPT-4.1-mini fallback)
+       — handles any PDF format, corrects misaligned columns and wrong numbers
+    2. Heuristic fallback (pdfplumber + regex) only if LLM fails or returns 0 rows
     """
+    from app.services.llm_ocr_service import structure_with_llm
+
+    # LLM first — most accurate for bank statements
+    logger.warning(f"Starting LLM OCR: bank={bank_name}, model={ai_model}, file={file_path}")
+    try:
+        llm_results = await structure_with_llm(file_path, bank_name, year, ai_model)
+        if llm_results:
+            logger.warning(f"LLM OCR success: {len(llm_results)} transactions extracted.")
+            return llm_results
+        logger.warning("LLM returned 0 rows, falling back to heuristic...")
+    except Exception as e:
+        logger.warning(f"LLM OCR failed ({e}), falling back to heuristic...")
+
+    # Heuristic fallback
     def _do_heuristic():
         tables = extract_tables_from_pdf(file_path, bank_name)
         results = parse_bank_statement(tables, bank_name, year)
-
         if len(results) < 3:
-            logger.info(f"Table extraction: {len(results)} rows, trying text fallback...")
             text_results = _extract_text_fallback(file_path, bank_name, year)
             if len(text_results) > len(results):
-                logger.info(f"Text fallback: {len(text_results)} rows (better), using it.")
                 return text_results
-
         return results
 
     results = await asyncio.to_thread(_do_heuristic)
-
-    # Quality gate — if heuristic result is poor, use LLM
-    from app.services.llm_ocr_service import (
-        check_extraction_quality,
-        structure_with_llm,
-        QUALITY_FILL_RATE,
-        QUALITY_MIN_ROWS,
-    )
-    fill_rate, total_rows = check_extraction_quality(results)
-    logger.info(f"Heuristic quality: fill_rate={fill_rate:.1%}, rows={total_rows}")
-
-    if fill_rate < QUALITY_FILL_RATE or total_rows < QUALITY_MIN_ROWS:
-        logger.info(
-            f"Quality below threshold (fill={fill_rate:.1%} < {QUALITY_FILL_RATE:.0%} "
-            f"or rows={total_rows} < {QUALITY_MIN_ROWS}), invoking LLM..."
-        )
-        llm_results = await structure_with_llm(file_path, bank_name, year, ai_model)
-        if len(llm_results) > len(results):
-            logger.info(f"LLM result: {len(llm_results)} rows — using LLM output.")
-            return llm_results
-        logger.info(f"LLM result not better ({len(llm_results)} rows), keeping heuristic.")
-
+    logger.warning(f"Heuristic fallback: {len(results)} rows extracted.")
     return results
 
 
