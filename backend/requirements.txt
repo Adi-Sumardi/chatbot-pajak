@@ -21,6 +21,7 @@ anthropic
 PyPDF2
 Pillow
 pdfplumber
+pymupdf
 
 # Export
 openpyxl

@@ -30,6 +30,7 @@ async def scan_document(
     file: UploadFile = File(...),
     bank_name: str | None = Form(None),
     period_year: int | None = Form(None),
+    ai_model: str = Form("claude"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -90,7 +91,7 @@ async def scan_document(
         total_pages = await _run_in_thread(get_total_pages, str(file_path))
         ocr_job.total_pages = total_pages
 
-        rows = await process_pdf(str(file_path), bank_name, period_year)
+        rows = await process_pdf(str(file_path), bank_name, period_year, ai_model)
 
         for row in rows:
             result = OCRResult(
