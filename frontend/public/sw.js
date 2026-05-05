@@ -1,4 +1,4 @@
-const CACHE_NAME = "chatbot-pajak-v1";
+const CACHE_NAME = "chatbot-pajak-v2";
 const STATIC_ASSETS = [
   "/",
   "/chat",
@@ -24,6 +24,7 @@ self.addEventListener("install", (event) => {
 
 // Activate - clean old caches
 self.addEventListener("activate", (event) => {
+  console.log("[Service Worker] Activated v2");
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
