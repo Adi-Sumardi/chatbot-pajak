@@ -18,7 +18,7 @@ settings = get_settings()
 
 # Chunking config
 CHUNK_SIZE_PAGES = 5       # Pages per LLM call
-MAX_CHARS_PER_CHUNK = 10_000  # ~2500 tokens input per chunk
+MAX_CHARS_PER_CHUNK = 24_000  # ~6000 tokens input per chunk — generous headroom to avoid mid-row truncation
 MAX_PARALLEL_CALLS = 3    # Max concurrent LLM calls (rate-limit safe)
 
 # Quality thresholds — if below either, trigger LLM
@@ -118,8 +118,15 @@ def _convert_llm_rows(raw_rows: list) -> list[dict]:
     return results
 
 
-def _build_prompt(text: str, bank_name: str | None, chunk_info: str) -> str:
+def _build_prompt(text: str, bank_name: str | None, chunk_info: str, year: int | None = None) -> str:
     bank_label = (bank_name or "").upper() or "Unknown"
+    year_hint = (
+        f"- Tahun transaksi adalah {year}. Jika tanggal pada teks hanya berformat DD/MM tanpa tahun, "
+        f"gunakan {year} sebagai tahunnya kecuali ada informasi periode lain yang jelas menyatakan sebaliknya.\n"
+        if year
+        else "- Jika tanggal pada teks hanya berformat DD/MM tanpa tahun, cari informasi periode "
+        "laporan (biasanya di header halaman pertama) untuk menentukan tahunnya.\n"
+    )
     return (
         f"Berikut adalah hasil ekstraksi teks dari rekening koran Bank {bank_label} ({chunk_info}).\n"
         "Teks mungkin tidak rapi karena proses ekstraksi PDF.\n\n"
@@ -138,6 +145,7 @@ def _build_prompt(text: str, bank_name: str | None, chunk_info: str) -> str:
         "- Abaikan header, footer, nomor halaman, baris total/ringkasan\n"
         "- Gabungkan baris keterangan lanjutan ke transaksi sebelumnya\n"
         "- Koreksi tanggal jika format tidak standar\n"
+        f"{year_hint}"
         "- Kembalikan HANYA JSON array, tanpa penjelasan apapun"
     )
 
@@ -168,10 +176,11 @@ async def _process_one_chunk(
     chunk_info: str,
     ai_model: str,
     semaphore: asyncio.Semaphore,
+    year: int | None = None,
 ) -> list[dict]:
     """Send one text chunk to LLM, with automatic fallback to the other provider."""
     async with semaphore:
-        prompt = _build_prompt(chunk_text, bank_name, chunk_info)
+        prompt = _build_prompt(chunk_text, bank_name, chunk_info, year)
         try:
             if ai_model == "claude":
                 raw = await _call_claude(prompt)
@@ -227,7 +236,10 @@ async def structure_with_llm(
             continue
         combined = "\n\n--- Halaman Baru ---\n\n".join(parts)
         if len(combined) > MAX_CHARS_PER_CHUNK:
-            combined = combined[:MAX_CHARS_PER_CHUNK]
+            # Cut at the last line break before the limit so a transaction row
+            # is never split mid-line (which would confuse or lose that row).
+            cutoff = combined.rfind("\n", 0, MAX_CHARS_PER_CHUNK)
+            combined = combined[:cutoff] if cutoff > 0 else combined[:MAX_CHARS_PER_CHUNK]
         end_page = min(i + CHUNK_SIZE_PAGES, total_pages)
         chunks.append((combined, f"halaman {i + 1}–{end_page}"))
 
@@ -239,7 +251,7 @@ async def structure_with_llm(
 
     semaphore = asyncio.Semaphore(MAX_PARALLEL_CALLS)
     tasks = [
-        _process_one_chunk(text, bank_name, info, ai_model, semaphore)
+        _process_one_chunk(text, bank_name, info, ai_model, semaphore, year)
         for text, info in chunks
     ]
     chunk_results = await asyncio.gather(*tasks, return_exceptions=True)

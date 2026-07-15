@@ -71,6 +71,7 @@ const STATUS_CONFIG: Record<string, { icon: typeof CheckCircle2; color: string; 
 
 export default function ScannerPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [periodYear, setPeriodYear] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [scanning, setScanning] = useState(false);
 
@@ -117,11 +118,15 @@ export default function ScannerPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      if (periodYear.trim()) {
+        formData.append("period_year", periodYear.trim());
+      }
       const res = await api.post("/ocr/scan", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 120000,
+        timeout: 290000, // just under nginx's 300s proxy_read_timeout for large multi-page statements
       });
       setFile(null);
+      setPeriodYear("");
       await fetchJobs();
       // Auto-select the new job
       handleSelectJob(res.data);
@@ -263,6 +268,26 @@ export default function ScannerPage() {
                 onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
               />
             </div>
+
+            {file && (
+              <div>
+                <label htmlFor="period-year" className="text-[11px] font-medium text-muted-foreground">
+                  Tahun periode (opsional)
+                </label>
+                <input
+                  id="period-year"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder={`Contoh: ${new Date().getFullYear()}`}
+                  value={periodYear}
+                  onChange={(e) => setPeriodYear(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-1.5 text-xs"
+                />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Bantu OCR menentukan tahun jika tanggal di rekening koran tidak menyertakan tahun.
+                </p>
+              </div>
+            )}
 
             <Button
               className="w-full h-9 text-sm"

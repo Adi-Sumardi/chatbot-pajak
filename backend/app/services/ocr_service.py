@@ -600,20 +600,33 @@ async def process_pdf(
        — handles any PDF format, corrects misaligned columns and wrong numbers
     2. Heuristic fallback (pdfplumber + regex) only if LLM fails or returns 0 rows
     """
-    from app.services.llm_ocr_service import structure_with_llm
+    from app.services.llm_ocr_service import (
+        structure_with_llm,
+        check_extraction_quality,
+        QUALITY_FILL_RATE,
+        QUALITY_MIN_ROWS,
+    )
 
     # LLM first — most accurate for bank statements
     logger.warning(f"Starting LLM OCR: bank={bank_name}, model={ai_model}, file={file_path}")
+    llm_results: list[dict] = []
     try:
         llm_results = await structure_with_llm(file_path, bank_name, year, ai_model)
-        if llm_results:
-            logger.warning(f"LLM OCR success: {len(llm_results)} transactions extracted.")
-            return llm_results
-        logger.warning("LLM returned 0 rows, falling back to heuristic...")
     except Exception as e:
         logger.warning(f"LLM OCR failed ({e}), falling back to heuristic...")
 
-    # Heuristic fallback
+    fill_rate, total_rows = check_extraction_quality(llm_results)
+    llm_ok = total_rows >= QUALITY_MIN_ROWS and fill_rate >= QUALITY_FILL_RATE
+    if llm_ok:
+        logger.warning(f"LLM OCR success: {total_rows} rows, fill_rate={fill_rate:.0%}")
+        return llm_results
+
+    logger.warning(
+        f"LLM OCR quality low (rows={total_rows}, fill_rate={fill_rate:.0%}), "
+        "cross-checking with heuristic extraction..."
+    )
+
+    # Heuristic fallback / cross-check
     def _do_heuristic():
         tables = extract_tables_from_pdf(file_path, bank_name)
         results = parse_bank_statement(tables, bank_name, year)
@@ -623,9 +636,19 @@ async def process_pdf(
                 return text_results
         return results
 
-    results = await asyncio.to_thread(_do_heuristic)
-    logger.warning(f"Heuristic fallback: {len(results)} rows extracted.")
-    return results
+    heuristic_results = await asyncio.to_thread(_do_heuristic)
+    heur_fill_rate, heur_total = check_extraction_quality(heuristic_results)
+    logger.warning(f"Heuristic extraction: {heur_total} rows, fill_rate={heur_fill_rate:.0%}")
+
+    if not llm_results:
+        return heuristic_results
+    if not heuristic_results:
+        return llm_results
+
+    # Both non-empty and neither passed the quality bar outright — pick whichever is better.
+    if heur_fill_rate > fill_rate or (heur_fill_rate == fill_rate and heur_total > total_rows):
+        return heuristic_results
+    return llm_results
 
 
 def get_total_pages(file_path: str) -> int:
