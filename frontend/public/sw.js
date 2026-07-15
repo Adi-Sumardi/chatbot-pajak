@@ -1,4 +1,4 @@
-const CACHE_NAME = "chatbot-pajak-v2";
+const CACHE_NAME = "chatbot-pajak-v3";
 const STATIC_ASSETS = [
   "/",
   "/chat",
@@ -10,7 +10,10 @@ const STATIC_ASSETS = [
   "/apple-touch-icon.png",
 ];
 
-// Install - cache static assets
+// Install - cache static assets. Deliberately does NOT call skipWaiting():
+// the new worker stays in "waiting" state until the page asks it to take
+// over (see the message listener below), so users get a reload prompt
+// instead of silently running mismatched JS/CSS against a new backend.
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -19,12 +22,10 @@ self.addEventListener("install", (event) => {
       });
     })
   );
-  self.skipWaiting();
 });
 
 // Activate - clean old caches
 self.addEventListener("activate", (event) => {
-  console.log("[Service Worker] Activated v2");
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
@@ -35,6 +36,14 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+// Let the page trigger activation of a waiting worker once the user
+// confirms the "update available" reload prompt.
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Fetch - network first, fallback to cache
