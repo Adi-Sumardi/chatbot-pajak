@@ -1,6 +1,6 @@
 {
-  "name": "Chatbot Pajak - Profesor Perpajakan Indonesia",
-  "short_name": "Chatbot Pajak",
+  "name": "Docscan AI Pajak - Asisten Pajak AI",
+  "short_name": "Docscan AI Pajak",
   "description": "Aplikasi chatbot AI untuk konsultasi perpajakan Indonesia. Dilengkapi fitur OCR scanner rekening koran.",
   "start_url": "/chat",
   "display": "standalone",

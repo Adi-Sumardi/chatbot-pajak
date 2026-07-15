@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "Chatbot Pajak"
+    APP_NAME: str = "Docscan AI Pajak"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 

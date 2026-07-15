@@ -67,7 +67,7 @@ export default function ChatMessage({ role, content, messageId, aiModel, files, 
       <div className={cn("flex-1 space-y-1.5 min-w-0", isUser ? "text-right" : "")}>
         <div className={cn("flex items-center gap-2", isUser ? "justify-end" : "")}>
           <span className="text-xs font-semibold text-foreground/70">
-            {isUser ? "Anda" : "Profesor Pajak"}
+            {isUser ? "Anda" : "Asisten Pajak AI"}
           </span>
           {aiModel && !isUser && (
             <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">

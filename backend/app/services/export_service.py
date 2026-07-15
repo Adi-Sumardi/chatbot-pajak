@@ -119,7 +119,7 @@ def export_chat_to_excel(content: str, output_path: str, title: str = "Laporan")
 
     # Subtitle
     ws.merge_cells("A2:F2")
-    ws["A2"].value = f"Dibuat oleh Chatbot Pajak - {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    ws["A2"].value = f"Dibuat oleh Docscan AI Pajak - {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     ws["A2"].font = Font(name="Calibri", size=9, color="888888")
 
     # Parse content
@@ -215,7 +215,7 @@ class ChatPDF(FPDF):
         self.set_y(-15)
         self.set_font("Helvetica", "I", 7)
         self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f"Chatbot Pajak - {datetime.now().strftime('%d/%m/%Y')} - Hal {self.page_no()}/{{nb}}", align="C")
+        self.cell(0, 10, f"Docscan AI Pajak - {datetime.now().strftime('%d/%m/%Y')} - Hal {self.page_no()}/{{nb}}", align="C")
 
 
 def _strip_emoji(text: str) -> str:

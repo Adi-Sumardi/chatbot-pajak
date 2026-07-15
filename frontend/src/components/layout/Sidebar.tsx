@@ -26,8 +26,8 @@ export default function Sidebar() {
           CP
         </div>
         <div>
-          <h1 className="text-sm font-bold text-foreground">Chatbot Pajak</h1>
-          <p className="text-xs text-muted-foreground">Profesor Perpajakan</p>
+          <h1 className="text-sm font-bold text-foreground">Docscan AI Pajak</h1>
+          <p className="text-xs text-muted-foreground">Asisten Pajak AI</p>
         </div>
       </div>
 

@@ -159,7 +159,7 @@ export default function ChatPage() {
             </button>
             <Bot className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-medium text-foreground truncate max-w-[50vw] sm:max-w-md">
-              {currentConversation?.title || "Profesor Pajak AI"}
+              {currentConversation?.title || "Asisten Pajak AI"}
             </h2>
           </div>
           <ModelSelector value={aiModel} onChange={setAiModel} disabled={isStreaming} />
@@ -177,7 +177,7 @@ export default function ChatPage() {
                     </div>
                     <h3 className="text-lg font-semibold">Selamat Datang!</h3>
                     <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                      Saya adalah Profesor Pajak Indonesia. Silakan tanya tentang PPh, PPN, PPnBM,
+                      Saya adalah Asisten Pajak AI Indonesia. Silakan tanya tentang PPh, PPN, PPnBM,
                       faktur pajak, bukti potong, atau lampirkan dokumen pajak untuk dianalisis.
                     </p>
                   </div>
@@ -250,9 +250,9 @@ export default function ChatPage() {
             <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4 sm:mb-6">
               <Bot className="h-8 w-8 sm:h-10 sm:w-10" />
             </div>
-            <h2 className="text-lg sm:text-xl font-bold">Chatbot Pajak</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Docscan AI Pajak</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              Profesor Perpajakan Indonesia siap membantu Anda. Pilih percakapan yang ada atau mulai chat baru.
+              Asisten Pajak AI siap membantu Anda. Pilih percakapan yang ada atau mulai chat baru.
             </p>
             <button
               onClick={handleNewChat}

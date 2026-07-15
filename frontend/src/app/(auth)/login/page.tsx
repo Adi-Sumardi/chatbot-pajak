@@ -33,13 +33,13 @@ export default function LoginPage() {
         <div className="text-center">
           <Image
             src="/logo/logo-chatbot.png"
-            alt="Chatbot Pajak"
+            alt="Docscan AI Pajak"
             width={56}
             height={56}
             className="mx-auto rounded-xl"
           />
-          <h1 className="mt-4 text-2xl font-bold text-foreground">Chatbot Pajak</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Profesor Perpajakan Indonesia</p>
+          <h1 className="mt-4 text-2xl font-bold text-foreground">Docscan AI Pajak</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Asisten Pajak AI</p>
         </div>
 
         {/* Form */}

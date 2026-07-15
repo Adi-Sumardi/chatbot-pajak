@@ -23,13 +23,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Chatbot Pajak - Profesor Perpajakan Indonesia",
+  title: "Docscan AI Pajak - Asisten Pajak AI",
   description: "Aplikasi chatbot AI untuk konsultasi perpajakan Indonesia",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Chatbot Pajak",
+    title: "Docscan AI Pajak",
   },
   icons: {
     icon: [
@@ -53,7 +53,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Chatbot Pajak" />
+        <meta name="apple-mobile-web-app-title" content="Docscan AI Pajak" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

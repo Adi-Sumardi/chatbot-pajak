@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Chatbot Pajak - Profesor Perpajakan Indonesia",
+    description="Docscan AI Pajak - Asisten Pajak AI",
     lifespan=lifespan,
 )
 

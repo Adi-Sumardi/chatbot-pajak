@@ -40,12 +40,12 @@ export default function Navbar() {
             <Link href="/chat" className="flex items-center gap-2">
               <Image
                 src="/logo/logo-chatbot.png"
-                alt="Chatbot Pajak"
+                alt="Docscan AI Pajak"
                 width={32}
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-sm font-bold text-white hidden md:block">Chatbot Pajak</span>
+              <span className="text-sm font-bold text-white hidden md:block">Docscan AI Pajak</span>
             </Link>
 
             {/* Nav Items */}

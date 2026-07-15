@@ -170,7 +170,7 @@ async def send_message(
     conv_id = conversation.id
     user_id = current_user.id
     user_content = data.content
-    conv_title = conversation.title or "Laporan Chatbot Pajak"
+    conv_title = conversation.title or "Laporan Docscan AI Pajak"
 
     # Stream response using a separate DB session
     async def event_stream():
@@ -334,7 +334,7 @@ async def export_message(
         select(Conversation).where(Conversation.id == message.conversation_id)
     )
     conv = conv_result.scalar_one_or_none()
-    title = conv.title or "Laporan Chatbot Pajak" if conv else "Laporan Chatbot Pajak"
+    title = conv.title or "Laporan Docscan AI Pajak" if conv else "Laporan Docscan AI Pajak"
 
     export_dir = Path(settings.EXPORT_DIR) / str(user.id)
     export_dir.mkdir(parents=True, exist_ok=True)
