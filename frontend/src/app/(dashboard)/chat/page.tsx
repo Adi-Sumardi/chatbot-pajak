@@ -14,6 +14,7 @@ interface AttachedFile {
   docId?: string;
   uploading?: boolean;
   name: string;
+  tempId: string;
 }
 
 export default function ChatPage() {
@@ -40,6 +41,13 @@ export default function ChatPage() {
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Reset attached files when switching conversations (reset-on-change during render, not in an effect)
+  const lastConversationIdRef = useRef<string | undefined>(currentConversation?.id);
+  if (lastConversationIdRef.current !== currentConversation?.id) {
+    lastConversationIdRef.current = currentConversation?.id;
+    if (attachedFiles.length > 0) setAttachedFiles([]);
+  }
+
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
@@ -50,11 +58,6 @@ export default function ChatPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, streamingContent]);
-
-  // Reset attached files when switching conversations
-  useEffect(() => {
-    setAttachedFiles([]);
-  }, [currentConversation?.id]);
 
   const handleNewChat = async () => {
     await createConversation(aiModel);
@@ -87,8 +90,8 @@ export default function ChatPage() {
     if (!files || files.length === 0) return;
 
     for (const file of Array.from(files)) {
-      const tempId = `temp-${Date.now()}-${file.name}`;
-      const newFile: AttachedFile = { file, name: file.name, uploading: true };
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const newFile: AttachedFile = { file, name: file.name, uploading: true, tempId };
       setAttachedFiles((prev) => [...prev, newFile]);
 
       try {
@@ -99,14 +102,14 @@ export default function ChatPage() {
         });
         setAttachedFiles((prev) =>
           prev.map((f) =>
-            f.name === file.name && f.uploading
+            f.tempId === tempId
               ? { ...f, docId: res.data.id, uploading: false }
               : f
           )
         );
       } catch (err) {
         console.error("Upload failed:", err);
-        setAttachedFiles((prev) => prev.filter((f) => !(f.name === file.name && f.uploading)));
+        setAttachedFiles((prev) => prev.filter((f) => f.tempId !== tempId));
       }
     }
 

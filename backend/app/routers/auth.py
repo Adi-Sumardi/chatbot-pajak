@@ -13,6 +13,7 @@ from app.services.auth_service import (
     create_user,
     decode_token,
     get_user_by_email,
+    get_user_by_id,
     hash_password,
     verify_password,
 )
@@ -51,10 +52,15 @@ async def refresh_token(data: TokenRefresh, db: AsyncSession = Depends(get_db)):
         payload = decode_token(data.refresh_token)
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
-        user_id = payload["sub"]
+        user_id = uuid.UUID(payload["sub"])
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
 
+    user = await get_user_by_id(db, user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
+
+    user_id = str(user_id)
     return TokenResponse(
         access_token=create_access_token(user_id),
         refresh_token=create_refresh_token(user_id),

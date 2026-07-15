@@ -307,8 +307,9 @@ async def export_message(
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token required")
 
-    payload = decode_token(token)
-    if not payload:
+    try:
+        payload = decode_token(token)
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     user = await get_user_by_id(db, payload.get("sub", ""))

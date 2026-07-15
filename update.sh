@@ -6,7 +6,7 @@
 # =============================================================================
 set -euo pipefail
 
-APP_DIR="/var/www/chatbot-pajak"
+APP_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 BRANCH="main"
 
 echo "============================================"

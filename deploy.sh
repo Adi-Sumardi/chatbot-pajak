@@ -1,24 +1,31 @@
 #!/bin/bash
 # =============================================================================
-# deploy.sh - Deploy Chatbot Pajak to existing VPS (Biznet Gio Cloud)
-# VPS sudah ada: Node.js 20, Python 3.10, Nginx, Certbot
-# Akan: cleanup docscan, install PostgreSQL + Python 3.11, deploy chatbot
-# Domain: chatbot.adilabs.id
+# deploy.sh - Deploy Chatbot Pajak to a fresh VPS
+# Assumes: Node.js 20, Nginx, Certbot already installed
+# Will install: PostgreSQL + Python 3.11, then deploy the app end-to-end
 # =============================================================================
 set -euo pipefail
 
 # --- Configuration ---
 APP_NAME="chatbot-pajak"
-DOMAIN="chatbot.adilabs.id"
-APP_DIR="/var/www/$APP_NAME"
 REPO_URL="https://github.com/Adi-Sumardi/chatbot-pajak.git"
 BRANCH="main"
 DB_NAME="chatbot_pajak"
 DB_USER="chatbot_user"
 
+# --- Prompt for deployment-specific settings ---
+read -p "Enter domain (e.g. chatbot.example.com): " DOMAIN
+if [ -z "$DOMAIN" ]; then
+  echo "Domain is required." >&2
+  exit 1
+fi
+read -p "Enter install directory [/var/www/$APP_NAME]: " APP_DIR_INPUT
+APP_DIR="${APP_DIR_INPUT:-/var/www/$APP_NAME}"
+
 echo "============================================"
 echo "  Chatbot Pajak - Deployment"
 echo "  Domain: $DOMAIN"
+echo "  Directory: $APP_DIR"
 echo "============================================"
 
 # --- Prompt for secrets ---
@@ -31,34 +38,10 @@ read -p "Enter Anthropic API key (or leave blank): " ANTHROPIC_KEY
 read -p "Enter your email for SSL certificate: " SSL_EMAIL
 
 # =============================================================================
-# 1. Cleanup docscan
+# 1. Install missing packages (PostgreSQL, Python 3.11)
 # =============================================================================
 echo ""
-echo "[1/9] Cleaning up docscan..."
-
-# Stop docscan service
-sudo systemctl stop docscan-backend.service 2>/dev/null || true
-sudo systemctl disable docscan-backend.service 2>/dev/null || true
-sudo rm -f /etc/systemd/system/docscan-backend.service
-
-# Remove docscan nginx config
-sudo rm -f /etc/nginx/sites-enabled/docscan
-sudo rm -f /etc/nginx/sites-available/docscan
-
-# Remove docscan files (keep backup just in case)
-if [ -d "/var/www/docscan" ]; then
-  sudo mv /var/www/docscan /var/www/docscan_backup_$(date +%Y%m%d)
-  echo "  Docscan backed up to /var/www/docscan_backup_$(date +%Y%m%d)"
-fi
-
-sudo systemctl daemon-reload
-echo "  Docscan cleaned up."
-
-# =============================================================================
-# 2. Install missing packages (PostgreSQL, Python 3.11)
-# =============================================================================
-echo ""
-echo "[2/9] Installing required packages..."
+echo "[1/8] Installing required packages..."
 sudo apt-get update
 sudo apt-get install -y \
   software-properties-common \
@@ -77,10 +60,10 @@ echo "  Node.js: $(node -v)"
 echo "  PostgreSQL: $(psql --version)"
 
 # =============================================================================
-# 3. Setup PostgreSQL
+# 2. Setup PostgreSQL
 # =============================================================================
 echo ""
-echo "[3/9] Setting up PostgreSQL..."
+echo "[2/8] Setting up PostgreSQL..."
 
 # Ensure PostgreSQL is running
 sudo systemctl enable postgresql
@@ -94,10 +77,10 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 echo "  Database '$DB_NAME' ready."
 
 # =============================================================================
-# 4. Clone repository
+# 3. Clone repository
 # =============================================================================
 echo ""
-echo "[4/9] Cloning repository..."
+echo "[3/8] Cloning repository..."
 sudo mkdir -p "$APP_DIR"
 sudo chown "$USER:$USER" "$APP_DIR"
 
@@ -108,10 +91,10 @@ else
 fi
 
 # =============================================================================
-# 5. Setup backend
+# 4. Setup backend
 # =============================================================================
 echo ""
-echo "[5/9] Setting up backend..."
+echo "[4/8] Setting up backend..."
 cd "$APP_DIR/backend"
 
 python3.11 -m venv venv
@@ -140,10 +123,10 @@ alembic upgrade head
 deactivate
 
 # =============================================================================
-# 6. Setup frontend
+# 5. Setup frontend
 # =============================================================================
 echo ""
-echo "[6/9] Setting up frontend..."
+echo "[5/8] Setting up frontend..."
 cd "$APP_DIR/frontend"
 
 cat > .env.local <<ENVFILE
@@ -153,11 +136,16 @@ ENVFILE
 npm ci
 npm run build
 
+# Standalone output doesn't include static assets — copy them in like update.sh does,
+# otherwise the frontend serves with no CSS/JS until the first update.sh run.
+cp -r public .next/standalone/public
+cp -r .next/static .next/standalone/.next/static
+
 # =============================================================================
-# 7. Create systemd services
+# 6. Create systemd services
 # =============================================================================
 echo ""
-echo "[7/9] Creating systemd services..."
+echo "[6/8] Creating systemd services..."
 
 # Backend service
 sudo tee /etc/systemd/system/chatbot-backend.service > /dev/null <<SERVICE
@@ -210,10 +198,10 @@ sudo systemctl enable chatbot-backend chatbot-frontend
 sudo systemctl start chatbot-backend chatbot-frontend
 
 # =============================================================================
-# 8. Setup Nginx
+# 7. Setup Nginx
 # =============================================================================
 echo ""
-echo "[8/9] Configuring Nginx..."
+echo "[7/8] Configuring Nginx..."
 
 sudo tee /etc/nginx/sites-available/$APP_NAME > /dev/null <<'NGINX'
 server {
@@ -267,10 +255,10 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # =============================================================================
-# 9. SSL Certificate (Let's Encrypt)
+# 8. SSL Certificate (Let's Encrypt)
 # =============================================================================
 echo ""
-echo "[9/9] Obtaining SSL certificate..."
+echo "[8/8] Obtaining SSL certificate..."
 sudo certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$SSL_EMAIL"
 
 echo ""
