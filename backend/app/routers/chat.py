@@ -197,9 +197,16 @@ async def send_message(
                 # Check if user asked for Excel/PDF file
                 msg_id = str(assistant_message.id)
 
-            file_keywords = ["excel", "xlsx", "spreadsheet", "pdf", "file", "unduh", "download", "ekspor", "export"]
+            # "pdf"/"file" alone are too generic (e.g. "SPT formatnya pdf?") and were
+            # false-triggering file generation. Require an explicit format word
+            # (excel/xlsx/spreadsheet/pdf) OR an explicit intent word (unduh/download/
+            # ekspor/export) rather than either alone.
+            format_keywords = ["excel", "xlsx", "spreadsheet", "pdf"]
+            intent_keywords = ["unduh", "download", "ekspor", "export"]
             user_lower = user_content.lower()
-            wants_file = any(k in user_lower for k in file_keywords)
+            wants_file = any(k in user_lower for k in format_keywords) or any(
+                k in user_lower for k in intent_keywords
+            )
 
             if wants_file and len(full_response) > 100:
                 from pathlib import Path
