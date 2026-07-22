@@ -17,9 +17,13 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 # Chunking config
-CHUNK_SIZE_PAGES = 5       # Pages per LLM call
+CHUNK_SIZE_PAGES = 3       # Pages per LLM call — kept small so a dense statement's
+                           # JSON output doesn't blow past MAX_OUTPUT_TOKENS and get truncated
 MAX_CHARS_PER_CHUNK = 24_000  # ~6000 tokens input per chunk — generous headroom to avoid mid-row truncation
 MAX_PARALLEL_CALLS = 3    # Max concurrent LLM calls (rate-limit safe)
+MAX_OUTPUT_TOKENS = 8192  # Output budget per chunk. A chunk with many dense transactions
+                           # easily needs >4096 tokens of JSON; a truncated response fails to
+                           # parse and silently drops every row in that chunk (not just the last).
 
 # Quality thresholds — if below either, trigger LLM
 QUALITY_FILL_RATE = 0.60  # 60% of rows must have date + amount
@@ -82,13 +86,41 @@ def _parse_llm_json(raw: str) -> list[dict]:
     """Extract JSON array from LLM response, handle markdown code blocks."""
     raw = re.sub(r"```(?:json)?", "", raw).strip().rstrip("`").strip()
     match = re.search(r"\[.*\]", raw, re.DOTALL)
-    if not match:
-        return []
+    candidate = match.group() if match else raw
     try:
-        return json.loads(match.group())
+        return json.loads(candidate)
     except json.JSONDecodeError as e:
-        logger.warning(f"LLM JSON decode error: {e} — raw snippet: {raw[:200]}")
+        logger.warning(f"LLM JSON decode error: {e} — attempting to salvage partial rows")
+        return _salvage_truncated_json_array(raw)
+
+
+def _salvage_truncated_json_array(raw: str) -> list[dict]:
+    """Recover complete row objects from a JSON array that got cut off mid-response
+    (e.g. hit the output token limit). Parses one top-level {...} object at a time
+    and stops at the first one that's incomplete, instead of discarding every row
+    in the chunk just because the last one was truncated.
+    """
+    start = raw.find("[")
+    if start == -1:
         return []
+    decoder = json.JSONDecoder()
+    idx = start + 1
+    n = len(raw)
+    objects = []
+    while idx < n:
+        while idx < n and raw[idx] in " \t\n\r,":
+            idx += 1
+        if idx >= n or raw[idx] == "]":
+            break
+        try:
+            obj, end = decoder.raw_decode(raw, idx)
+        except json.JSONDecodeError:
+            break
+        objects.append(obj)
+        idx = end
+    if objects:
+        logger.warning(f"Salvaged {len(objects)} complete row(s) from a truncated LLM response")
+    return objects
 
 
 def _convert_llm_rows(raw_rows: list) -> list[dict]:
@@ -154,7 +186,7 @@ async def _call_claude(prompt: str) -> str:
     client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
     msg = await client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=4096,
+        max_tokens=MAX_OUTPUT_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
     return msg.content[0].text
@@ -164,7 +196,7 @@ async def _call_openai(prompt: str) -> str:
     client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
     resp = await client.chat.completions.create(
         model="gpt-4.1-mini",
-        max_tokens=4096,
+        max_tokens=MAX_OUTPUT_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
     return resp.choices[0].message.content
